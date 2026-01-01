@@ -11,7 +11,7 @@
     <packaging>pom</packaging> <!-- 关键：必须是 pom -->
 
     <name>AI Chat Project</name>
-    <description>Modular AI Chat with Qwen via Ollama</description>
+    <description>Modular AI Chat with Ollama</description>
 
     <properties>
         <!-- Java 版本配置 -->
