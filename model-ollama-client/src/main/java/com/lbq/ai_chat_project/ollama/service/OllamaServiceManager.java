@@ -37,10 +37,8 @@ public class OllamaServiceManager {
      * 使用 volatile 保证多线程下可见性。
      * -- GETTER --
      *  获取当前激活的 endpoint 名称。
-     *
-     * @return "local" 或 "remote"
-
      */
+    // TODO 魔法值待定义
     @Getter
     private volatile String activeEndpoint = "local";
 
@@ -63,6 +61,7 @@ public class OllamaServiceManager {
      * @return 激活的客户端实例
      */
     public OllamaClient getActiveClient() {
+        // TODO 魔法值待定义
         return "remote".equals(activeEndpoint) ? remoteClient : localClient;
     }
 
@@ -76,7 +75,8 @@ public class OllamaServiceManager {
      * @throws IllegalArgumentException 如果 endpoint 无效
      */
     public void setActiveEndpoint(String endpoint) {
-        if (endpoint == null || (!"local".equals(endpoint) && !"remote".equals(endpoint))) {
+        // TODO 魔法值待定义
+        if ((!"local".equals(endpoint) && !"remote".equals(endpoint))) {
             throw new IllegalArgumentException("Endpoint must be 'local' or 'remote', got: " + endpoint);
         }
         if (!this.activeEndpoint.equals(endpoint)) {
@@ -96,6 +96,7 @@ public class OllamaServiceManager {
         if (userMessage == null || userMessage.trim().isEmpty()) {
             return Mono.error(new IllegalArgumentException("User message cannot be null or empty"));
         }
+        //TODO 模型选择
         if (model == null || model.trim().isEmpty()) {
             model = "qwen:latest"; // 默认模型
         }
@@ -118,7 +119,13 @@ public class OllamaServiceManager {
         return getActiveClient()
                 .listModels()
                 .onErrorReturn(Collections.emptyList())
-                .doOnSuccess(models -> log.debug("Retrieved {} models from {}", models.size(), activeEndpoint));
+                .doOnSuccess(models -> {
+                    if (models != null) {
+                        log.debug("Retrieved {} models from {}", models.size(), activeEndpoint);
+                    }else {
+                        log.debug("No models found in {}", activeEndpoint);
+                    }
+                });
     }
 
     /**
@@ -134,6 +141,7 @@ public class OllamaServiceManager {
      */
     private OllamaChatRequest buildRequest(String userMessage, String model) {
         OllamaChatRequest.Message message = new OllamaChatRequest.Message();
+        // TODO 用户消息 魔法值待定义
         message.setRole("user");
         message.setContent(userMessage);
 

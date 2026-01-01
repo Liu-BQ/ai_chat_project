@@ -39,6 +39,7 @@
         <module>model-ollama-client</module>
         <module>model-persistence</module>
         <module>model-web-api</module>
+        <module>model-common</module>
     </modules>
 
     <!-- 所有子模块都会自动继承这些依赖 -->

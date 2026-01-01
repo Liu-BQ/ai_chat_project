@@ -9,8 +9,6 @@ import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -54,7 +52,7 @@ public class OllamaClient {
      */
     public OllamaClient(OllamaProperties.OllamaEndpoint endpoint) {
         this.baseUrl = endpoint.getBaseUrl();
-
+// TODO 魔法值待定义
         // 创建固定大小的 Netty 连接池，高效复用 TCP 连接
         ConnectionProvider provider = ConnectionProvider.create("ollama-pool", endpoint.getConnectionPoolSize());
 
@@ -131,10 +129,27 @@ public class OllamaClient {
         });
     }
 
-    // OllamaClient.java
+    /**
+     * 查询 Ollama 服务中所有已拉取（pulled）的本地模型列表。
+     * <p>
+     * 该方法调用 Ollama 的 {@code GET /api/tags} 接口，获取当前服务实例上可用的模型名称。
+     * 返回结果仅包含模型的完整名称（如 {@code "qwen:latest"}、{@code "llama3:8b"}）。
+     * </p>
+     * <p>
+     * <strong>注意</strong>：
+     * <ul>
+     *   <li>此接口 <strong>不返回云端未拉取的模型</strong>，仅列出已下载到本地的模型。</li>
+     *   <li>若 Ollama 服务不可达或返回错误，建议调用方使用 {@code onErrorReturn} 或类似机制处理异常。</li>
+     *   <li>路径 {@code "/api/tags"} 是 Ollama 官方 API 的固定端点，后续可考虑提取为常量以消除魔法值。</li>
+     * </ul>
+     * </p>
+     *
+     * @return 模型名称列表（按 Ollama 返回顺序），若无模型则返回空列表；发生网络或解析错误时将抛出异常
+     * @see <a href="https://github.com/ollama/ollama/blob/main/docs/api.md#list-local-models">Ollama API - List Local Models</a>
+     */
     public Mono<List<String>> listModels() {
         return webClient.get()
-                .uri("/api/tags")
+                .uri(OllamaConstants.ApiPath.TAGS)
                 .retrieve()
                 .bodyToMono(OllamaModelsResponse.class)
                 .map(response -> response.getModels().stream()

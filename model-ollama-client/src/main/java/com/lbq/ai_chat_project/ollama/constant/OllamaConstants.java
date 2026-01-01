@@ -22,6 +22,8 @@ public final class OllamaConstants {
     public static class ApiPath {
         /** 聊天接口路径 */
         public static final String CHAT = "/api/chat";
+        /** 模型标签接口路径 */
+        public static final String TAGS = "/api/tags";
     }
 
     /** 默认连接配置常量 */
