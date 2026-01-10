@@ -12,3 +12,13 @@ ollama:
     connect-timeout: 10000
     read-timeout: 120000
     write-timeout: 60000
+
+
+
+# 缓存配置（Caffeine）
+cache:
+  caffeine:
+    # 模型列表缓存过期时间（支持5m/10s等，@Value会自动转Duration）
+    model-cache-expire: 5m
+    # 缓存最大容量
+    maximum-size: 100

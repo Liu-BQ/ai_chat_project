@@ -32,6 +32,17 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Caffeine缓存依赖（Spring Boot 3+ 推荐） -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+        <!-- Spring缓存抽象（已包含在Spring Boot Starter中，若没有则添加） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+
         <!-- lombok 依赖 -->
         <dependency>
             <groupId>org.projectlombok</groupId>

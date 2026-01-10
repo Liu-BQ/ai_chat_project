@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -68,14 +69,20 @@ public class OllamaServiceManager {
     public OllamaServiceManager(
             @Qualifier("localOllamaClient") OllamaClient localClient,
             @Qualifier("remoteOllamaClient") OllamaClient remoteClient,
-            OllamaProperties ollamaProperties) {
-        // 校验核心依赖非空
+            OllamaProperties ollamaProperties,
+            CacheManager cacheManager) { // 注入配置好的缓存管理器
         this.localClient = Objects.requireNonNull(localClient, "本地OllamaClient不能为空");
         this.remoteClient = Objects.requireNonNull(remoteClient, "远程OllamaClient不能为空");
         this.ollamaProperties = Objects.requireNonNull(ollamaProperties, "Ollama配置不能为空");
-        // 初始化本地/远程模型缓存（true表示允许缓存null值）
-        this.localModelCache = new ConcurrentMapCache("ollama-local-models", true);
-        this.remoteModelCache = new ConcurrentMapCache("ollama-remote-models", true);
+
+        // 从缓存管理器获取“5分钟过期”的缓存（缓存名要和配置对应）
+        this.localModelCache = cacheManager.getCache("ollama-local-models");
+        this.remoteModelCache = cacheManager.getCache("ollama-remote-models");
+
+        // 校验缓存初始化成功
+        Objects.requireNonNull(this.localModelCache, "本地模型缓存初始化失败");
+        Objects.requireNonNull(this.remoteModelCache, "远程模型缓存初始化失败");
+
         log.info("✅ OllamaServiceManager初始化完成 | 默认激活端点: {} | 缓存初始化完成（5分钟过期）", activeEndpoint);
     }
 
