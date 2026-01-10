@@ -1,33 +1,50 @@
-HELP.md
+# ========== 基础编译/构建产物 ==========
+# Maven/Gradle 构建目录
 target/
+model-app/target/
+model-common/target/
+model-ollama-client/target/
+model-persistence/target/
+model-web-api/target/
+# Maven wrapper 临时文件
 .mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+# 源码目录的target
+**/src/main/**/target/
+**/src/test/**/target/
 
-### STS ###
-.apt_generated
+
+# ========== IDE 配置文件 ==========
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+# Eclipse/STS
 .classpath
-.factorypath
 .project
 .settings
 .springBeans
 .sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
-/nbproject/private/
+# NetBeans
+nbproject/private/
+/build/
 /nbbuild/
 /dist/
 /nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
+# VS Code
 .vscode/
+
+
+# ========== Spring 环境配置文件（核心：只提交主配置+生产配置） ==========
+# 忽略本地环境配置（敏感信息）
+model-app/src/main/resources/application-local.yml
+# （可选：若有其他环境，比如test，也在这里添加忽略）
+# model-app/src/main/resources/application-test.yml
+
+# 【重要】确保主配置和生产配置不被忽略（必须提交）
+!model-app/src/main/resources/application.yml
+!model-app/src/main/resources/application-prod.yml
+
+
+# ========== 日志/临时文件 ==========
+logs/
+*.log

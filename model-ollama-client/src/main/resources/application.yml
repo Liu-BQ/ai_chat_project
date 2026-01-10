@@ -12,25 +12,3 @@ ollama:
     connect-timeout: 10000
     read-timeout: 120000
     write-timeout: 60000
-
-# Resilience4j 容错配置
-resilience4j:
-  retry:
-    configs:
-      ollama:  # 名称必须与代码中的 RESILIENCE_STRATEGY_NAME 一致
-        maxAttempts: 3
-        waitDuration: 1000
-        enableExponentialBackoff: true
-        exponentialBackoffMultiplier: 2.0
-        retryExceptions:
-          - org.springframework.web.reactive.function.client.WebClientResponseException
-          - java.net.ConnectException
-          - java.util.concurrent.TimeoutException
-  circuitbreaker:
-    configs:
-      ollama:
-        failureRateThreshold: 50
-        waitDurationInOpenState: 30s
-        slidingWindowSize: 10
-        minimumNumberOfCalls: 5
-        automaticTransitionFromOpenToHalfOpenEnabled: true
