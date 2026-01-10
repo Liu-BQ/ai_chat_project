@@ -22,7 +22,7 @@ public class BaseResult<T> implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 响应码：200=成功，非200=失败 */
-    private int code;
+    private String code;
 
     /** 响应消息 */
     private String message;
@@ -32,7 +32,7 @@ public class BaseResult<T> implements Serializable {
 
     // ===== 构造方法 =====
 
-    private BaseResult(int code, String message, T data) {
+    private BaseResult(String code, String message, T data) {
         this.code = code;
         this.message = message;
         this.data = data;
@@ -41,22 +41,22 @@ public class BaseResult<T> implements Serializable {
     // ===== 静态工厂方法 =====
 
     public static <T> BaseResult<T> success(T data) {
-        return new BaseResult<>(200, "OK", data);
+        return new BaseResult<>("200", "OK", data);
     }
 
     public static <T> BaseResult<T> success() {
         return success(null);
     }
 
-    public static <T> BaseResult<T> failure(int code, String message) {
+    public static <T> BaseResult<T> failure(String code, String message) {
         return new BaseResult<>(code, message, null);
     }
 
     public static <T> BaseResult<T> failure(String message) {
-        return failure(400, message);
+        return failure("400", message);
     }
 
     public static <T> BaseResult<T> error(String message) {
-        return failure(500, message);
+        return failure("500", message);
     }
 }

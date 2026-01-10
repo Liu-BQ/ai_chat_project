@@ -45,11 +45,7 @@
     <!-- 所有子模块都会自动继承这些依赖 -->
     <dependencies>
         <!-- 通用开发工具（所有模块都需要） -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>provided</scope>
-        </dependency>
+
     </dependencies>
 
     <!-- 统一依赖版本管理 -->
@@ -71,6 +67,11 @@
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
                 <version>${lombok.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <scope>runtime</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

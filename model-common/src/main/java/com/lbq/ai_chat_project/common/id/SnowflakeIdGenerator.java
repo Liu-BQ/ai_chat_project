@@ -124,17 +124,4 @@ public class SnowflakeIdGenerator {
         return currentTimestamp;
     }
 
-    // ================== 静态工厂方法（开发环境便捷使用） ==================
-
-    /**
-     * 创建默认雪花生成器（machineId = 1）。
-     * <p>
-     * ⚠️ 仅用于单机开发或测试环境！
-     * 生产环境必须通过配置（如 application.yml）指定唯一 machineId，避免 ID 冲突。
-     *
-     * @return 默认配置的 SnowflakeIdGenerator 实例
-     */
-    public static SnowflakeIdGenerator createDefault() {
-        return new SnowflakeIdGenerator(1L);
-    }
 }
