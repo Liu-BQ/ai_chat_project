@@ -1,0 +1,87 @@
+/*
+1. 浏览器样式重置（必含）
+清除浏览器默认样式差异，避免不同浏览器渲染不一致：
+ */
+/* 清除默认margin/padding */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box; /* 统一盒模型 */
+}
+
+/* 清除列表默认样式 */
+ul, ol {
+    list-style: none;
+}
+
+/* 清除链接默认样式 */
+a {
+    text-decoration: none;
+    color: inherit; /* 继承父元素颜色，避免默认蓝色下划线 */
+}
+
+/* 统一表单元素样式 */
+input, textarea, button {
+    outline: none; /* 清除默认聚焦边框 */
+    font-family: inherit; /* 继承全局字体 */
+}
+
+
+/**2. 全局样式变量（便于主题统一）
+定义项目通用颜色、字体、间距，后续修改主题时只需改这里：
+
+ */
+/* 颜色变量（示例：项目主色调为蓝色，辅助色为绿色） */
+:root {
+    --primary-color: #0071e3; /* 主色（按钮、选中状态） */
+    --secondary-color: #42b983; /* 辅助色（成功状态） */
+    --text-color: #111827; /* 正文颜色 */
+    --light-text: #6b7280; /* 次要文本颜色 */
+    --bg-color: #ffffff; /* 页面背景色 */
+    --border-color: #e5e7eb; /* 边框颜色 */
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --font-size-base: 14px;
+    --font-size-lg: 18px;
+    --border-radius: 8px;
+}
+
+
+/*
+3. 通用工具类（全局复用）
+定义常用布局、状态类，避免重复写 inline 样式：
+ */
+/* 布局工具类 */
+.center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flex-column {
+    flex-direction: column;
+}
+
+.gap-md {
+    gap: var(--spacing-md);
+}
+
+/* 状态工具类 */
+.hidden {
+    display: none !important;
+}
+
+.disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* 间距工具类 */
+.mt-md {
+    margin-top: var(--spacing-md);
+}
+
+.pb-lg {
+    padding-bottom: var(--spacing-lg);
+}

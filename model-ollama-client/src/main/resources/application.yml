@@ -2,18 +2,16 @@
 ollama:
   local:
     base-url: http://localhost:11434
-    connection-pool-size: 100
-    connect-timeout: 5000
-    read-timeout: 60000
-    write-timeout: 30000
+    connection-pool-size: 200
+    connect-timeout: 10000
+    read-timeout: 120000
+    write-timeout: 60000
   remote:
     base-url: https://ollama.prod.example.com
     connection-pool-size: 200
     connect-timeout: 10000
     read-timeout: 120000
     write-timeout: 60000
-
-
 
 # 缓存配置（Caffeine）
 cache:

@@ -6,21 +6,29 @@ import re
 from pathlib import Path
 
 # ================== 配置区 ==================
-# 源项目根目录（请确保路径正确）
 PROJECT_ROOT = r"S:\.code_\Object\ai_chat_project\ai_chat_project"
-
-# 输出文件路径（将自动追加时间戳）
 OUTPUT_FILE_BASE = r"S:\.code_\Object\ai_chat_project\ai_chat_project\shell\project_dump"
 
-# 要收集的文件扩展名（小写）
-EXTENSIONS = {'.java', '.xml', '.yml', '.yaml', '.md', '.properties', '.txt'}
-
-# 可选：排除某些目录（如 node_modules, .git 等）
+EXTENSIONS = {'.java', '.xml', '.yml', '.yaml', '.md', '.properties', '.txt' , '.vue' , '.js' , '.css'}
 EXCLUDE_DIRS = {'.git', 'target', 'build', 'node_modules', '__pycache__', '.idea', '.vscode'}
+
+# 是否保留历史 dump 文件（支持 True/False/"true"/"false"/"TRUE" 等，忽略大小写）
+KEEP_HISTORY = "true"  # ← 可改为 False, "false", "True", True 等
 # ===========================================
 
+def parse_bool(value):
+    """将多种 true/false 表示法转为 bool，忽略大小写"""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        val_lower = value.strip().lower()
+        if val_lower in ('true', '1', 'yes', 'on'):
+            return True
+        elif val_lower in ('false', '0', 'no', 'off'):
+            return False
+    raise ValueError(f"无法解析为布尔值: {value!r}。请使用 true/false、True/False、'true'/'false' 等。")
+
 def read_file_safely(file_path):
-    """尝试用多种编码读取文件，返回内容或 None"""
     encodings = ['utf-8', 'gbk', 'latin1']
     for enc in encodings:
         try:
@@ -28,71 +36,92 @@ def read_file_safely(file_path):
                 return f.read()
         except (UnicodeDecodeError, OSError):
             continue
-    return None  # 无法读取（可能是二进制文件）
+    return None
 
-def archive_old_dumps(output_dir: Path, base_name: str):
-    """
-    将 output_dir 下匹配 base_name_YYYYMMDDHHMMSS.txt 的旧文件
-    移动到 output_dir/his/ 目录下
-    """
-    # 构造正则表达式：base_name + _ + 14位数字 + .txt
-    pattern = re.compile(rf"^{re.escape(base_name)}_\d{{14}}\.txt$")
-    
-    his_dir = output_dir / "his"
+def backup_existing_dump(main_file: Path, keep_history: bool):
+    if not keep_history:
+        return
+
+    if not main_file.exists():
+        return
+
+    his_dir = main_file.parent / "his"
     his_dir.mkdir(exist_ok=True)
 
-    moved_count = 0
-    for item in output_dir.iterdir():
-        if item.is_file() and pattern.match(item.name):
-            try:
-                shutil.move(str(item), str(his_dir / item.name))
-                print(f"📁 归档历史文件: {item.name}")
-                moved_count += 1
-            except Exception as e:
-                print(f"⚠️  无法归档 {item.name}: {e}")
-    
-    if moved_count > 0:
-        print(f"✅ 已归档 {moved_count} 个历史 dump 文件到 {his_dir}")
+    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    backup_name = f"{main_file.stem}_{timestamp}{main_file.suffix}"
+    backup_path = his_dir / backup_name
+
+    try:
+        shutil.move(str(main_file), str(backup_path))
+        print(f"📁 已备份现有 dump 文件至: {backup_path}")
+    except Exception as e:
+        print(f"⚠️  备份失败: {e}")
+
+def is_dump_file(file_path: Path, main_dump_file: Path, project_root: Path) -> bool:
+    try:
+        if file_path.resolve() == main_dump_file.resolve():
+            return True
+
+        rel_to_root = file_path.relative_to(project_root)
+        parts = rel_to_root.parts
+
+        if len(parts) >= 3 and parts[-3] == 'shell' and parts[-2] == 'his':
+            filename = parts[-1]
+            if re.match(rf"^{re.escape(main_dump_file.stem)}_\d{{14}}\.txt$", filename, re.IGNORECASE):
+                return True
+
+        return False
+    except ValueError:
+        return False
 
 def main():
-    project_root = Path(PROJECT_ROOT)
+    # 解析 KEEP_HISTORY 配置（支持字符串和布尔）
+    try:
+        keep_history = parse_bool(KEEP_HISTORY)
+    except ValueError as e:
+        print(f"❌ 配置错误: {e}")
+        return
+
+    project_root = Path(PROJECT_ROOT).resolve()
     if not project_root.exists():
         print(f"❌ 错误：项目路径不存在！\n{project_root}")
         return
 
-    # 解析输出目录和基础文件名
-    output_base = Path(OUTPUT_FILE_BASE)
-    output_dir = output_base.parent
-    base_filename = output_base.name  # 例如 "project_dump"
-
-    # 确保输出目录存在
+    main_output_file = Path(OUTPUT_FILE_BASE).with_suffix(".txt").resolve()
+    output_dir = main_output_file.parent
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # 归档旧的历史 dump 文件
-    archive_old_dumps(output_dir, base_filename)
-
-    # 生成带时间戳的新输出文件名
-    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-    output_filename = f"{base_filename}_{timestamp}.txt"
-    output_path = output_dir / output_filename
+    backup_existing_dump(main_output_file, keep_history)
 
     collected_files = []
-    
-    # 遍历所有文件
     for file_path in project_root.rglob('*'):
-        if file_path.is_file():
-            # 跳过排除的目录
-            rel_parts = file_path.relative_to(project_root).parts[:-1]
-            if any(part in EXCLUDE_DIRS for part in rel_parts):
-                continue
-            
-            # 检查扩展名
-            if file_path.suffix.lower() in EXTENSIONS:
-                collected_files.append(file_path)
+        if not file_path.is_file():
+            continue
 
-    print(f"🔍 找到 {len(collected_files)} 个目标文件，开始读取...")
+        rel_parts = file_path.relative_to(project_root).parts[:-1]
+        if any(part in EXCLUDE_DIRS for part in rel_parts):
+            continue
 
-    with open(output_path, 'w', encoding='utf-8') as out_f:
+        if is_dump_file(file_path, main_output_file, project_root):
+            if keep_history or True:
+                print(f"⏭️  跳过 dump 文件: {file_path.relative_to(project_root)}")
+            continue
+
+        if file_path.suffix.lower() in EXTENSIONS:
+            collected_files.append(file_path)
+
+    print(f"🔍 找到 {len(collected_files)} 个目标文件，开始写入新 dump...")
+
+    with open(main_output_file, 'w', encoding='utf-8') as out_f:
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        out_f.write(f"# 全量项目 dump 文件\n")
+        out_f.write(f"# 生成时间: {current_time}\n")
+        out_f.write(f"# 共 {len(collected_files)} 个文件\n")
+        if not keep_history:
+            out_f.write("# 注意：历史备份已禁用 (KEEP_HISTORY=false)\n")
+        out_f.write("=" * 80 + "\n\n")
+
         for i, file_path in enumerate(collected_files, 1):
             rel_path = file_path.relative_to(project_root)
             content = read_file_safely(file_path)
@@ -101,18 +130,19 @@ def main():
                 print(f"⚠️  跳过（无法读取）: {rel_path}")
                 continue
 
-            # 写入分隔符 + 路径 + 内容
             out_f.write(f"\n{'='*80}\n")
             out_f.write(f"File: {rel_path}\n")
             out_f.write(f"{'='*80}\n\n")
             out_f.write(content)
-            out_f.write("\n")  # 确保文件末尾有换行
+            out_f.write("\n")
 
             if i % 20 == 0:
                 print(f"✅ 已处理 {i} / {len(collected_files)} 个文件...")
 
-    print(f"\n🎉 完成！输出文件已保存至:\n{output_path.absolute()}")
-    print(f"📊 总共收集了 {len(collected_files)} 个文件。")
+    print(f"\n🎉 完成！新 dump 文件已生成:\n{main_output_file}")
+    print(f"📊 共收集 {len(collected_files)} 个文件。")
+    if not keep_history:
+        print("ℹ️  历史备份已禁用（旧 dump 文件被直接覆盖）。")
 
 if __name__ == "__main__":
     main()

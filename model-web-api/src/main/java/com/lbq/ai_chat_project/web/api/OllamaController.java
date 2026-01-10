@@ -15,9 +15,10 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Ollama前端API控制器（完整版，支持所有核心接口）
@@ -48,8 +49,12 @@ public class OllamaController {
             @RequestParam @NotBlank(message = "模型名称不能为空") String model,
             @RequestParam @NotBlank(message = "用户消息不能为空") String message) {
         log.info("📩 接收非流式聊天请求 | 模型: {} | 用户消息: {}", model, maskMessage(message));
+        // 关键：设置接口超时为 5分钟，覆盖全局默认值
         return ollamaServiceManager.chat(model, message)
                 .map(BaseResult::success)
+                .timeout(Duration.ofMinutes(5))  // 手动设置超时
+                .onErrorResume(TimeoutException.class, ex ->
+                        Mono.just(BaseResult.error("请求处理超时，请简化提问或稍后重试")))
                 .onErrorResume(BaseException.class, ex -> Mono.just(BaseResult.failure(ex.getErrorCode(), ex.getMessage())))
                 .onErrorResume(ex -> Mono.just(BaseResult.error("聊天失败: " + ex.getMessage())));
     }

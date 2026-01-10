@@ -89,6 +89,17 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.11.0</version>
+                    <!-- 新增：配置编译参数，保留方法参数名 -->
+                    <configuration>
+                        <source>${java.version}</source> <!-- 继承properties中的Java版本（21） -->
+                        <target>${java.version}</target>
+                        <release>${java.version}</release>
+                        <encoding>${project.build.sourceEncoding}</encoding> <!-- 继承编码配置（UTF-8） -->
+                        <!-- 核心：添加 -parameters 编译参数，保留参数名供反射使用 -->
+                        <compilerArgs>
+                            <arg>-parameters</arg>
+                        </compilerArgs>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>

@@ -1,0 +1,16 @@
+# 原有 WebFlux 超时配置（保留）
+spring:
+  webflux:
+    reactive:
+      stream:
+        timeout: 300000  # 5分钟（WebFlux 响应式超时）
+  # 新增：Spring MVC 异步请求超时（关键）
+  mvc:
+    async:
+      request-timeout: 300000  # 5分钟（MVC 异步超时，覆盖默认30秒）
+
+# 原有 Netty 超时配置（保留，兜底）
+server:
+  netty:
+    connection-timeout: 300000
+    response-timeout: 300000

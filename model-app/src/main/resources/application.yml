@@ -4,4 +4,4 @@ spring:
     name: ai_chat_project
   # 指定默认激活的环境（本地环境），可通过启动参数覆盖（如 --spring.profiles.active=prod）
   profiles:
-    active: local
+    active: local,common

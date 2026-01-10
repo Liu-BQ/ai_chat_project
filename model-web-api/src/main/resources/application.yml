@@ -1,0 +1,12 @@
+# ========== 跨域配置（CORS） ==========
+cors:
+  # 允许的跨域源（多个用逗号分隔，生产环境改为实际前端域名）
+  allowed-origins: http://127.0.0.1:5173,http://localhost:5173
+  # 允许的请求方法（* 表示所有，也可指定 GET,POST,PUT,DELETE）
+  allowed-methods: "*"
+  # 允许的请求头（* 表示所有）
+  allowed-headers: "*"
+  # 是否允许携带Cookie（前后端认证需要时开启）
+  allow-credentials: true
+  # 预检请求缓存时间（秒，减少OPTIONS请求次数）
+  max-age: 3600
