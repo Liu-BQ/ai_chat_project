@@ -5,12 +5,14 @@ import com.lbq.ai_chat_project.ollama.dto.chat.GenerateRequest;
 import com.lbq.ai_chat_project.ollama.dto.model.ModelManageRequest;
 import com.lbq.ai_chat_project.ollama.service.OllamaServiceManager;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -97,12 +99,17 @@ class AiChatProjectApplicationTests {
             log.info("正在测试文本补全 | 模型: {} | 提示词: {}", targetModel, request.getPrompt());
             Flux<String> resultFlux = ollamaServiceManager.generate(request);
             StringBuilder result = new StringBuilder();
-            resultFlux.subscribe(
-                    content -> result.append(content),
-                    error -> fail("文本补全失败: " + error.getMessage()),
-                    () -> log.info("文本补全完成 | 结果: {}", result.toString())
-            );
 
+            // 关键修复：使用 blockLast() 阻塞等待流完成，确保所有数据接收完毕
+            resultFlux.doOnNext(content -> {
+                        log.trace("接收文本补全片段：{}", content);
+                        result.append(content);
+                    })
+                    .doOnError(error -> fail("文本补全失败: " + error.getMessage()))
+                    .doOnComplete(() -> log.info("文本补全完成 | 结果: {}", result.toString()))
+                    .blockLast(Duration.ofSeconds(30)); // 阻塞30秒超时，避免无限等待
+
+            // 此时流已完全接收，断言结果非空
             assertFalse(result.toString().isEmpty(), "文本补全结果为空");
             log.info("===== 测试完成：文本补全通过 =====");
         } catch (Exception e) {
@@ -119,13 +126,18 @@ class AiChatProjectApplicationTests {
         log.info("===== 开始测试：生成嵌入 =====");
         try {
             ollamaServiceManager.setActiveEndpoint("local");
-            // 需提前拉取嵌入模型（如 all-minilm）
             List<String> offlineModels = ollamaServiceManager.listModelNames().block();
             assertNotNull(offlineModels, "无本地模型，无法测试生成嵌入");
+
+            // 关键修改：找不到嵌入模型时返回null，而非直接抛出异常
             String embedModel = offlineModels.stream()
-                    .filter(model -> model.contains("minilm") || model.contains("bge"))
+                    .filter(model -> model.contains("minilm") || model.contains("bge") || model.contains("embed"))
                     .findFirst()
-                    .orElseThrow(() -> new RuntimeException("未找到嵌入模型，请执行 `ollama pull all-minilm`"));
+                    .orElse(null);
+
+            // 核心：无嵌入模型时跳过测试（标记为SKIPPED，而非FAILED）
+            Assumptions.assumeTrue(embedModel != null,
+                    "未找到嵌入专用模型！请执行 `ollama pull all-minilm` 或 `ollama pull bge` 拉取模型后再运行该测试");
 
             EmbedRequest request = new EmbedRequest();
             request.setModel(embedModel);
@@ -133,10 +145,11 @@ class AiChatProjectApplicationTests {
 
             log.info("正在测试生成嵌入 | 模型: {} | 输入: {}", embedModel, request.getInput());
             Mono<List<List<Double>>> embeddingsMono = ollamaServiceManager.embed(request);
-            List<List<Double>> embeddings = embeddingsMono.block();
+            List<List<Double>> embeddings = embeddingsMono.block(Duration.ofSeconds(30)); // 增加30秒超时
 
             assertNotNull(embeddings, "生成嵌入结果为空");
             assertFalse(embeddings.isEmpty(), "生成嵌入结果为空列表");
+            assertTrue(embeddings.get(0).size() > 0, "嵌入向量维度为0，不符合预期");
             log.info("生成嵌入完成 | 向量维度: {}", embeddings.get(0).size());
             log.info("===== 测试完成：生成嵌入通过 =====");
         } catch (Exception e) {
